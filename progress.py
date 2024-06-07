@@ -1,6 +1,6 @@
 import os
 
-from flask import Flask, make_response, redirect, render_template, request
+from flask import Flask, redirect, render_template, request
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get(
@@ -12,28 +12,28 @@ def get_progress_color(progress, scale):
     ratio = progress / scale
 
     if ratio < 0.3:
-        return "#d9534f"
-    if ratio < 0.7:
-        return "#f0ad4e"
-
-    return "#5cb85c"
+        return "#d9534f" #red
+    elif ratio < 0.7:
+        return "#f0ad4e" #orange
+    else:
+        return "#5cb85c" #green
 
 
 def get_template_fields(progress):
     title = request.args.get("title")
 
-    scale = 100
     try:
         scale = int(request.args.get("scale"))
     except (TypeError, ValueError):
-        pass
+        scale = 100
 
+    # Special use of conditional
     progress_width = 60 if title else 90
     try:
         progress_width = int(request.args.get("width"))
     except (TypeError, ValueError):
         pass
-
+ 
     return {
         "title": title,
         "title_width": 10 + 6 * len(title) if title else 0,
@@ -49,19 +49,14 @@ def get_template_fields(progress):
 @app.route("/<int:progress>/")
 def get_progress_svg(progress):
     template_fields = get_template_fields(progress)
-
-    template = render_template("progress.svg", **template_fields)
-
-    response = make_response(template)
-    response.headers["Content-Type"] = "image/svg+xml"
-    return response
+    return render_template("progress.svg", **template_fields)
 
 
 @app.route("/")
 def redirect_to_github():
-    return redirect("https://github.com/fredericojordan/progress-bar", code=302)
+    return redirect("http://127.0.0.1:5000/50")
 
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="127.0.0.1", port=port)
